@@ -74,7 +74,7 @@ def barkley_tw_rhs(xi: float, y: np.ndarray, par: Params) -> np.ndarray:
     dp = ((u + mu) * p - f_reaction(q, u, r)) / D
 
     denom = (u - s)
-    # Avoid literal blow-up if you land extremely close to u=s.
+    # Avoid blow-up if you land extremely close to u=s.
     # (Geometrically, u=s is a singular surface for this coordinate choice.)
     if abs(denom) < 1e-15:
         du = np.sign(denom) * np.inf
@@ -231,11 +231,11 @@ def main() -> None:
     # --- Choose parameters (you will tune these) ---
     # r > 2/3 puts you in the bistable regime described in the paper.
     par = Params(
-        D=1,
-        r=2,
-        eps=0.1,
-        zeta=0.79,
-        s=0.5,   # tweak; note mu=-zeta-s
+        D=2.0,
+        r=0.8,  
+        eps=0.01,
+        zeta=0.7,
+        s=0.3,   # tweak; note mu=-zeta-s
     )
 
     # Print equilibria:
@@ -247,7 +247,7 @@ def main() -> None:
     # --- A small perturbation cloud around X1 ---
     # You can bias this in directions suggested by the linearization later.
     rng = np.random.default_rng(0)
-    perts = 1e-2 * rng.normal(size=(30, 3))
+    perts = 1e-1 * rng.normal(size=(30, 3))
     # keep u-perturbations smaller to avoid pushing toward u=s singularity accidentally
     perts[:, 2] *= 0.2
 
