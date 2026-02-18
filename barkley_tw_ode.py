@@ -216,7 +216,7 @@ def shooting_sweep_from_X1(
       - Heteroclinics/fronts/backs correspond to connecting orbits between equilibria in (q,p,u).
       - Start near X1=(0,0,2) and perturb in (q,p,u), integrate forward in xi.
 
-    You can replace this with proper manifold continuation later.
+    I can replace this with proper manifold continuation later.
     """
     X1 = X1_equilibrium()
     orbits = []
