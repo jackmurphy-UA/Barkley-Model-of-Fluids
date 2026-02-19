@@ -25,6 +25,7 @@ Dependencies: numpy, scipy, matplotlib
 
 from __future__ import annotations
 
+from matplotlib.pylab import eigvals
 import numpy as np
 from dataclasses import dataclass
 from typing import Callable, Tuple, Optional, List
@@ -77,7 +78,8 @@ def barkley_tw_rhs(xi: float, y: np.ndarray, par: Params) -> np.ndarray:
     # Avoid blow-up if you land extremely close to u=s.
     # (Geometrically, u=s is a singular surface for this coordinate choice.)
     if abs(denom) < 1e-15:
-        du = np.sign(denom) * np.inf
+        du = np.inf if denom >= 0 else -np.inf
+
     else:
         du = eps * g_reaction(q, u) / denom
 
@@ -128,6 +130,33 @@ def X2_equilibrium(r: float) -> Optional[np.ndarray]:
         return None
     qb = 1.0 + (r + ub - 2.0) / (r + 0.1)
     return np.array([qb, 0.0, ub], dtype=float)
+
+
+#------------------------------
+# Jacobian + linearization 
+#------------------------------
+
+def jacobian_at(y: np.ndarray, par: Params) -> np.ndarray:
+    q, p, u = y
+    D, r, eps, mu, s = par.D, par.r, par.eps, par.mu, par.s
+
+    # f = q*(A - B*(q-1)^2), A=r+u-2, B=r+0.1
+    B = r + 0.1
+    A = r + u - 2.0
+    h = A - B*(q-1.0)**2
+    f_q = h + q*(-2.0*B*(q-1.0))
+    f_u = q
+
+    g_q = 2.0*(1.0 - u)
+    g_u = -1.0 - 2.0*q
+    denom = (u - s)
+
+    # At equilibria g=0, so d/du [g/(u-s)] = g_u/(u-s)
+    return np.array([
+        [0.0, 1.0, 0.0],
+        [-f_q/D, (u+mu)/D, -f_u/D],
+        [eps*g_q/denom, 0.0, eps*g_u/denom],
+    ], dtype=float)
 
 
 # -----------------------------
@@ -207,7 +236,7 @@ def shooting_sweep_from_X1(
     xi_span: Tuple[float, float],
     perturbations: np.ndarray,
     r: float,
-    max_step: float = 0.05,
+    max_step: float = 0.1,
 ) -> List[solve_ivp]:
     """
     Very crude first pass: launch orbits from small perturbations of X1 and see where they go.
@@ -228,15 +257,26 @@ def shooting_sweep_from_X1(
 
 
 def main() -> None:
-    # --- Choose parameters (you will tune these) ---
+    # --- Choose parameters (will tune these) ---
     # r > 2/3 puts you in the bistable regime described in the paper.
     par = Params(
-        D=2.0,
-        r=0.8,  
+        D=0.01,
+        r=0.7,
         eps=0.01,
-        zeta=0.7,
-        s=0.3,   # tweak; note mu=-zeta-s
+        zeta=0.79,
+        s=0.01,   # note mu = -zeta - s
     )
+
+    X1 = X1_equilibrium()
+    J1 = jacobian_at(X1, par)
+    eigvals, eigvecs = np.linalg.eig(J1)
+    iu = np.argmax(eigvals.real)          # unstable eigenvalue index
+    vu = eigvecs[:, iu].real
+    vu /= np.linalg.norm(vu)
+
+    delta = 1e-7
+    y0 = X1 + delta * vu      # try also X1 - delta*vu
+
 
     # Print equilibria:
     print("Params:", par)
@@ -244,23 +284,47 @@ def main() -> None:
     print("X1 =", X1_equilibrium())
     print("X2 =", X2_equilibrium(par.r))
 
-    # --- A small perturbation cloud around X1 ---
-    # You can bias this in directions suggested by the linearization later.
-    rng = np.random.default_rng(0)
-    perts = 1e-1 * rng.normal(size=(30, 3))
-    # keep u-perturbations smaller to avoid pushing toward u=s singularity accidentally
-    perts[:, 2] *= 0.2
+    # -------------------------
+    # Single-orbit integration
+    # -------------------------
+    X1 = X1_equilibrium()
 
-    # Integrate a bunch of orbits
-    orbits = shooting_sweep_from_X1(
+    # Choose ONE perturbation (can tune this direction/magnitude).
+    # Keep u-perturbation small so we don't drift toward the singular surface u=s.
+    d = np.array([1e-5, 0, 0], dtype=float)   # <-- tweak as needed
+    y0 = X1 + d
+
+    # Integrate (choose direction; see notes below)
+    sol = integrate_orbit(
+        y0=y0,
+        xi_span=(0.0, 300.0),   # forward in xi
+        # xi_span=(300.0, 0),   # backward in xi
         par=par,
-        xi_span=(0.0, 300.0),
-        perturbations=perts,
-        r=par.r,
-        max_step=0.1,
+        max_step=0.01,
+        rtol=1e-9,
+        atol=1e-12,
     )
 
-    plot_orbits(orbits, show_equilibria=True, r=par.r)
+    # Plot only this orbit
+    plot_orbits([sol], show_equilibria=True, r=par.r)
+
+    # -----------------------------------------
+    # Keep perturbation sweep code for later
+    # -----------------------------------------
+    # rng = np.random.default_rng(0)
+    # perts = 1e-2 * rng.normal(size=(30, 3))
+    # perts[:, 2] *= 0.2
+    #
+    # orbits = shooting_sweep_from_X1(
+    #     par=par,
+    #     xi_span=(300.0, 0.0),  # backward in xi
+    #     perturbations=perts,
+    #     r=par.r,
+    #     max_step=0.1,
+    # )
+    #
+    # plot_orbits(orbits, show_equilibria=True, r=par.r)
+
 
 
 if __name__ == "__main__":
