@@ -52,6 +52,9 @@ Concrete numerical/analytic objectives include:
 - `barkley_tw_ode.py`
   - Implements the 3D traveling-wave ODE.
   - Provides basic phase-portrait plotting and a crude shooting sweep from `X1`.
+  - More to come.
+- 'eigvals.py'
+  - Computes eigenvalues.
 
 ## Quick start
 
