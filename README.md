@@ -4,7 +4,7 @@ This repository contains exploratory numerical tools for the *traveling-wave / s
 
 ## Background
 
-The starting point is the reduced PDE model for turbulence intensity `q(x,t)` and centerline velocity `u(x,t)`:
+The starting point is the coupled PDE model for turbulence intensity `q(x,t)` and centerline velocity `u(x,t)`:
 - `q_t = D q_xx + (ζ - u) q_x + f(q,u;r)`
 - `u_t = -u u_x + ε g(q,u)`
 
@@ -12,7 +12,7 @@ with reaction terms
 - `f(q,u;r) = q( r + u - 2 - (r+0.1)(q-1)^2 )`
 - `g(q,u) = 2 - u + 2q(1-u)`.
 
-A traveling-wave ansatz `(q,u)(x,t) = (q*,u*)(x - s t)` and spatial-dynamics formulation yields a 3D ODE in the traveling coordinate `ξ = x - s t`:
+A traveling-wave ansatz `(q,u)(x,t) = (q*,u*)(x - s t)` and spatial-dynamics formulation yields a 3D ODE system in the traveling coordinate `ξ = x - s t`:
 - `q' = p`
 - `p' = ((u + μ)p - f(q,u;r))/D`
 - `u' = ε g(q,u) / (u - s)`
@@ -53,12 +53,12 @@ Concrete numerical/analytic objectives include:
   - Implements the 3D traveling-wave ODE.
   - Provides basic phase-portrait plotting and a crude shooting sweep from `X1`.
   - More to come.
-- 'eigvals.py'
+- 'eigvals.py'  (to-do)
   - Computes eigenvalues.
 
 ## Quick start
 
-Create an environment and run:
+Create an environment and run: (fix)
 
 ```bash
 python -m venv .venv
