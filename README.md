@@ -46,6 +46,11 @@ Concrete numerical/analytic objectives include:
 4. **Model variations**
    - experiment with simplified 3D ODE surrogates or normal-form style reductions around the loop;
    - compare against analytic predictions (fast–slow structure, Melnikov-style matching, etc.).
+  
+5. **Comparison with Navier-Stokes simulations**
+
+6. **Prove local well-posedness of original PDE model**
+   - Actively doing this
 
 ## Repo contents
 
