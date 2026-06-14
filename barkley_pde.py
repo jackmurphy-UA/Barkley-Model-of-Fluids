@@ -16,7 +16,7 @@ import matplotlib.pyplot as plt
 from scipy.integrate import solve_ivp
 
 # Define the parameters
-D = 1.0      # Diffusion coefficient
+D = 0.20      # Diffusion coefficient
 zeta = 0.5   # Advection coefficient    
 eps = 0.01   # Time scale separation parameter
 r = 1.0      # Control parameter
@@ -39,7 +39,7 @@ def initial_conditions(x):
     u0 = np.zeros_like(x)
     
     # Initialize q with a localized perturbation
-    q0[(x > 40) & (x < 60)] = 1.0
+    q0[(x > 40) & (x < 60)] = 2.0
     
     return q0, u0
 
@@ -107,5 +107,8 @@ plt.ylabel('Space')
 plt.subplot(2, 1, 2)
 plt.imshow(u_solution, aspect='auto', extent=[0, T, 0, L], origin='lower')
 plt.colorbar(label='u')
+plt.title('Barkley PDE Simulation - u')
+plt.xlabel('Time')
+plt.ylabel('Space')
 plt.show()
 
